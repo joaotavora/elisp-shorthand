@@ -20,14 +20,11 @@
 
 ;;; Commentary:
 
-;; Read README.md for now.
-
 ;;; Code:
 
 (require 'cl-lib)
 
 (defvar shorthand-shorthands nil)
-(defvar shorthand-unconditional-reader-magic nil)
 (put 'shorthand-shorthands 'safe-local-variable #'consp)
 
 (defun shorthand--expand-shorthand (form)
@@ -42,19 +39,14 @@
                        do (setq name (replace-match long-pat t nil name)))
               (setq form (intern name))))
     (string) (number)
-    (t
-     ;; this bit is most definitely not working correctly.
-     (cond ((byte-code-function-p form)
-            (cl-loop for e across form do (shorthand--expand-shorthand e)))
-           (t (message "[shorthand--expand-shorthand] got unknown %s"
-                       (type-of form))))))
+    (t       (message "[shorthand] unexpectged %s" (type-of form))))
   form)
 
-(defun shorthand-read-wrapper (wrappee &rest stuff)
-  (if (or shorthand-shorthands shorthand-unconditional-reader-magic)
-      (shorthand--expand-shorthand
-       (let ((obarray (obarray-make))) (apply wrappee stuff)))
-    (apply wrappee stuff)))
+(defun shorthand-read-wrapper (wrappee stream &rest stuff)
+  (if (and load-file-name (string-match "\\.elc$" load-file-name))
+      (apply wrappee stream stuff)
+    (shorthand--expand-shorthand
+     (let ((obarray (obarray-make))) (apply wrappee stream stuff)))))
 
 (defun shorthand-intern-soft-wrapper (wrappee name &rest stuff)
   (let ((res (apply wrappee name stuff)))
@@ -66,10 +58,14 @@
                             stuff)))))
 
 (defun shorthand-load-wrapper (wrappee file &rest stuff)
-  ;; TODO: we certainly don't want to do this, but I think autoloads
-  ;; break for some reason.
-  (let ((shorthand-shorthands nil))
-    (apply wrappee file stuff)))
+  (let (file-local-shorthands)
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (hack-local-variables)
+        (setq file-local-shorthands shorthand-shorthands)))
+    (let ((shorthand-shorthands file-local-shorthands))
+      (apply wrappee file stuff)))))
 
 (advice-add 'read        :around #'shorthand-read-wrapper)
 (advice-add 'intern-soft :around #'shorthand-intern-soft-wrapper)

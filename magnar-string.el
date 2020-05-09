@@ -1,9 +1,10 @@
-;;; magnar-string.el --- The long lost Emacs string manipulation library.
+;;; magnar-string.el --- Formerly s.el, now with 99% less namespace pain!
 
 ;; Copyright (C) 2012-2015 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 1.12.0
+;; Hacked-by: João Távora <joaotavora@gmail.com>
+;; Version: 1.12.0-xxx
 ;; Keywords: strings
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -22,7 +23,6 @@
 ;;; Commentary:
 
 ;; The long lost Emacs string manipulation library,
-;;
 ;; now with 99% less namespace pain!
 ;;
 ;; See documentation on https://github.com/magnars/s.el#functions
@@ -744,8 +744,8 @@ suffix."
 (defalias 's-uppercase-p 's-uppercase?)
 
 
-(provide 's)
-;;; s.el ends here
+(provide 'magnar-string)
+;;; magnar-string.el ends here,
 ;; Local Variables:
 ;; shorthand-shorthands: (("^s-" . "magnar-string-"))
 ;; End:
